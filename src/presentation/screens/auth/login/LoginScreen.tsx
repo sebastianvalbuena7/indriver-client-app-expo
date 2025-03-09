@@ -7,6 +7,7 @@ import { useState } from "react";
 import { EmailValidator } from "../../../utils";
 import { ApiRequestHandler } from "../../../../data/sources/remote/api/ApiRequestHandler";
 import { AuthResponse } from "../../../../domain/models/AuthResponse";
+import { defaultErrorResponse, ErrorResponse } from "../../../../domain/models/ErrorResponse";
 
 interface Props extends StackScreenProps<RootStackParamList, 'LoginScreen'> { };
 
@@ -20,20 +21,40 @@ export const LoginScreen = ({ navigation, route }: Props) => {
             return;
         }
 
-        if (!EmailValidator(email)) {
-            Alert.alert('Error', 'El email no es valido')
-            return;
-        }
+        // if (!EmailValidator(email)) {
+        //     Alert.alert('Error', 'El email no es valido')
+        //     return;
+        // }
 
+        await login(email, password)
+    }
+
+    const login = async (email: string, password: string): Promise<AuthResponse | ErrorResponse> => {
         try {
             const response = await ApiRequestHandler.post<AuthResponse>('/auth/login', {
                 email,
                 password
             });
 
-            console.log(response.data.user.name);
-        } catch (error) {
-            console.log('Error en la solicitud', error);
+            console.log(response.data);
+
+            return response.data;
+        } catch (error: any) {
+            if (error.response) { 
+                const errorData: ErrorResponse = error.response.data;
+
+                if (Array.isArray(errorData.message)) {
+                    console.error('Errores multiples del servidor', errorData.message.join(', '));
+                } else {
+                    console.error('Error del servidor', errorData.message);
+                }
+    
+                return errorData;
+            } else {
+                console.log('Error en la peticion', error.message);
+
+                return defaultErrorResponse;
+            }
         }
     }
 
