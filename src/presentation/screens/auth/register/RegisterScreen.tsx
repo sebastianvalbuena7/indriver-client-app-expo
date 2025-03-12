@@ -5,64 +5,55 @@ import { styles } from "./Styles"
 import { DefaultRoundedButton, DefaultTextInput } from "../../../components"
 import { RootStackParamList } from "../../../navigator/MainStackNavigator"
 import { EmailValidator } from "../../../utils"
+import { container } from "../../../../di/container"
+import { RegisterViewModel } from "./RegisterViewModel"
 
 interface Props extends StackScreenProps<RootStackParamList, 'RegisterScreen'> { };
 
 export const RegisterScreen = ({ navigation, route }: Props) => {
     const [name, setName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [lastname, setLastname] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleRegister = () => {
-        if (name === '') {
-            Alert.alert('Error', 'El nombre esta vacio')
-            return;
-        }
+    const registerViewModel: RegisterViewModel = container.resolve('registerViewModel');
 
-        if (lastName === '') {
-            Alert.alert('Error', 'El apellido esta vacio')
-            return;
-        }
+    const handleRegister = async () => {
+        if (name === '')
+            return Alert.alert('Error', 'El nombre esta vacio');
 
-        if (email === '') {
-            Alert.alert('Error', 'El correo esta vacio')
-            return;
-        }
+        if (lastname === '')
+            return Alert.alert('Error', 'El apellido esta vacio');
 
-        if (phone === '') {
-            Alert.alert('Error', 'El telefono esta vacio')
-            return;
-        }
+        if (email === '')
+            return Alert.alert('Error', 'El correo esta vacio');
 
-        if (password === '') {
-            Alert.alert('Error', 'La contraseña esta vacia')
-            return;
-        }
+        if (phone === '')
+            return Alert.alert('Error', 'El telefono esta vacio');
 
-        if (confirmPassword === '') {
-            Alert.alert('Error', 'La confirmación de contraseña no puede estar vacia')
-            return;
-        }
+        if (password === '')
+            return Alert.alert('Error', 'La contraseña esta vacia');
 
-        if (EmailValidator(email)) {
-            Alert.alert('Error', 'El correo no es valido')
-            return;
-        }
+        if (confirmPassword === '')
+            return Alert.alert('Error', 'La confirmación de contraseña no puede estar vacia');
 
-        if (password !== confirmPassword) {
-            Alert.alert('Error', 'Las contraseñas no coinciden')
-            return;
-        }
+        if (!EmailValidator(email))
+            return Alert.alert('Error', 'El correo no es valido');
 
-        console.log(name)
-        console.log(lastName)
-        console.log(email)
-        console.log(phone)
-        console.log(password)
-        console.log(confirmPassword)
+        if (password !== confirmPassword)
+            return Alert.alert('Error', 'Las contraseñas no coinciden');
+
+        const response = await registerViewModel.register({
+            name,
+            lastname,
+            email,
+            phone,
+            password
+        });
+
+        console.log(response)
     }
 
     return (
@@ -108,8 +99,8 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
 
                         <DefaultTextInput
                             placeholder='Last Name'
-                            value={lastName}
-                            onChangeText={setLastName}
+                            value={lastname}
+                            onChangeText={setLastname}
                             icon={require('../../../../../assets/user_image.png')}
                         />
 

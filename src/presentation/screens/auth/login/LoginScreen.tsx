@@ -5,9 +5,7 @@ import { RootStackParamList } from "../../../navigator/MainStackNavigator";
 import { styles } from "./Styles";
 import { useState } from "react";
 import { EmailValidator } from "../../../utils";
-import { ApiRequestHandler } from "../../../../data/sources/remote/api/ApiRequestHandler";
-import { AuthResponse } from "../../../../domain/models/AuthResponse";
-import { defaultErrorResponse, ErrorResponse } from "../../../../domain/models/ErrorResponse";
+import { container } from "../../../../di/container";
 
 interface Props extends StackScreenProps<RootStackParamList, 'LoginScreen'> { };
 
@@ -15,47 +13,16 @@ export const LoginScreen = ({ navigation, route }: Props) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    const loginViewModel = container.resolve('loginViewModel');
+
     const handleLogin = async () => {
-        if (email == '' || password == '') {
-            Alert.alert('Error', 'El email y el password no pueden estar vacios')
-            return;
-        }
+        if (email == '' || password == '')
+            return Alert.alert('Error', 'El email y el password no pueden estar vacios');
 
-        // if (!EmailValidator(email)) {
-        //     Alert.alert('Error', 'El email no es valido')
-        //     return;
-        // }
+        if (!EmailValidator(email))
+            return Alert.alert('Error', 'El email no es valido');
 
-        await login(email, password)
-    }
-
-    const login = async (email: string, password: string): Promise<AuthResponse | ErrorResponse> => {
-        try {
-            const response = await ApiRequestHandler.post<AuthResponse>('/auth/login', {
-                email,
-                password
-            });
-
-            console.log(response.data);
-
-            return response.data;
-        } catch (error: any) {
-            if (error.response) { 
-                const errorData: ErrorResponse = error.response.data;
-
-                if (Array.isArray(errorData.message)) {
-                    console.error('Errores multiples del servidor', errorData.message.join(', '));
-                } else {
-                    console.error('Error del servidor', errorData.message);
-                }
-    
-                return errorData;
-            } else {
-                console.log('Error en la peticion', error.message);
-
-                return defaultErrorResponse;
-            }
-        }
+        await loginViewModel.login(email, password)
     }
 
     return (
